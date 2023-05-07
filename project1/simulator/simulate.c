@@ -17,6 +17,9 @@ typedef struct stateStruct {
 void printState(stateType *);
 int convertNum(int num);
 
+void parse(stateType *statePtr, int *opcode, int *arg0, int *arg1, int *arg2);
+void isValidReg(int arg);
+
 int main(int argc, char *argv[])
 {
     char line[MAXLINELENGTH];
@@ -46,7 +49,98 @@ int main(int argc, char *argv[])
         printf("memory[%d]=%d\n", state.numMemory, state.mem[state.numMemory]);
     }
 
-		/* TODO: */
+    /* initialize register and program counter to 0 */
+    state.pc=0;
+    for (int i = 0; i < NUMREGS; i++) {
+        state.reg[i] = 0;
+    }
+
+    /* simulate the program until the program executes a halt */
+    int opcode;
+    int arg0, arg1, arg2;
+    int offsetField;
+    int instructionCount = 0;
+    int checkHalt = 0;
+
+    while(!checkHalt) {
+        printState(&state);
+        parse(&state, &opcode, &arg0, &arg1, &arg2);
+        state.pc++;
+
+        /* R-type instructions */
+        if (opcode == 0 || opcode == 1) {
+            isValidReg(arg0);
+            isValidReg(arg1);
+            isValidReg(arg2);
+
+            switch(opcode) {
+                case 0:
+                    state.reg[arg2] = state.reg[arg0] + state.reg[arg1];
+                    break;
+                case 1:
+                    state.reg[arg2] = ~(state.reg[arg0] || state.reg[arg1]);
+                    break;
+            }
+
+            instructionCount++;
+        }
+
+        /* I-type instructions */
+        else if (opcode == 2 || opcode == 3 || opcode == 4) {
+            isValidReg(arg0);
+            isValidReg(arg1);
+            offsetField = convertNum(arg2);
+
+            /* check if the offsetField fits in 16 bits */
+            if (offsetField < -32768 || offsetField > 32767) {
+                printf("error: offsetField out of range\n");
+                exit(1);
+            }
+
+            switch(opcode) {
+                case 2:
+                    state.reg[arg1] = state.mem[state.reg[arg0] + offsetField];
+                    break;
+                case 3:
+                    state.mem[state.reg[arg0] + offsetField] = state.reg[arg1];
+                    break;
+                case 4:
+                    if (state.reg[arg0] == state.reg[arg1]) {
+                        state.pc += offsetField;
+                    }
+                    break;
+            }
+
+            instructionCount++;
+        }
+
+        /* J-type instructions */
+        else if (opcode == 5) {
+            isValidReg(arg0);
+            isValidReg(arg1);
+
+            state.reg[arg1] = state.pc;
+            state.pc = state.reg[arg0];
+
+            instructionCount++;
+        }
+
+        /* O-type instructions */
+        else if (opcode == 6 || opcode == 7) {
+            if (opcode == 6) {
+                checkHalt = 1;
+            }
+
+            instructionCount++;
+        }
+    }
+    printf("machine halted\n");
+    printf("total of %d instructions executed\n", instructionCount);
+    printf("final state of machine:\n");
+    printState(&state);
+
+    fclose(filePtr);
+
     return(0);
 }
 
@@ -73,4 +167,20 @@ int convertNum(int num)
 		num -= (1 << 16);
 	}
 	return (num);
+}
+
+void parse(stateType *statePtr, int *opcode, int *arg0, int *arg1, int *arg2)
+{
+    *opcode = statePtr->mem[statePtr->pc] >> 22 & 0x7;
+    *arg0 = (statePtr->mem[statePtr->pc] >> 19) & 0x7;
+    *arg1 = (statePtr->mem[statePtr->pc] >> 16) & 0x7;
+    *arg2 = statePtr->mem[statePtr->pc] & 0xFFFF;
+}
+
+void isValidReg(int arg)
+{
+    if(arg < 0 || arg > 7){
+        printf("error: invalid register number\n");
+        exit(1);
+    }
 }
