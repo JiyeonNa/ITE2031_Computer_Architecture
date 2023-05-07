@@ -36,24 +36,244 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	/* here is an example for how to use readAndParse to read a line from
-		 inFilePtr */
-	if (!readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2)) {
-		/* reached end of file */
+	/* TODO: Phase-1 label calculation */
+	int lineNum = 0;
+	char addressTable[MAXLINELENGTH][MAXLINELENGTH];
+	int addressTableIndex = 0;
+	while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2)) {
+		lineNum++;
+
+		/* check if label is not empty */
+		if (label[0] != '\0') {
+			/* check if there's a duplicate definition of labels */
+			for (int i = 0; i < addressTableIndex; i++) {
+				if (!strcmp(label, addressTable[i])) {
+					printf("error: duplicate label definition at line %d\n", lineNum);
+					exit(1);
+				}
+			}
+
+			/* add label to address table */
+			strcpy(addressTable[addressTableIndex], label);
+		}
+		addressTableIndex++;
+
+		/* check if there's any use of undefined labels */
+		if ((strcmp(opcode, "lw") == 0 || strcmp(opcode, "sw") == 0 || strcmp(opcode, "beq") == 0 || strcmp(opcode, "jalr") == 0 || strcmp(opcode, ".fill") == 0) && label[0] != '\0') {
+			/* check if label exist in the address table */
+			int labelExist = 0;
+			for (int i = 0; i < addressTableIndex; i++) {
+				if (!strcmp(label, addressTable[i])) {
+					labelExist = 1;
+					break;
+				}
+			}
+
+			if (!labelExist) {
+				printf("error: undefined label at line %d\n", lineNum);
+				exit(1);
+			}
+		}
 	}
 
-	/* TODO: Phase-1 label calculation */
-
-	/* this is how to rewind the file ptr so that you start reading from the
-		 beginning of the file */
+	/* this is how to rewind the file ptr so that you start reading from the beginning of the file */
 	rewind(inFilePtr);
 
 	/* TODO: Phase-2 generate machine codes to outfile */
+	int PC = 0;
+	lineNum = 0;
+	while (readAndParse(inFilePtr, label, opcode, arg0, arg1, arg2)) {
+		lineNum++;
 
-	/* after doing a readAndParse, you may want to do the following to test the
-		 opcode */
-	if (!strcmp(opcode, "add")) {
-		/* do whatever you need to do for opcode "add" */
+		/* R-type instructions */
+		if (strcmp(opcode, "add") == 0 || strcmp(opcode, "nor") == 0) {
+			/* check if register argument is an integer */
+			if (!isNumber(arg0) || !isNumber(arg1) || !isNumber(arg2)) {
+				printf("error: invalid register argument at line %d\n", lineNum);
+				exit(1);
+			}
+
+			int regA = atoi(arg0);
+			int regB = atoi(arg1);
+			int destReg = atoi(arg2);
+
+			/* check if register number is inside the range [0,7] */
+			if (regA < 0 || regA > 7 || regB < 0 || regB > 7 || destReg < 0 || destReg > 7) {
+				printf("error: invalid register number at line %d\n", lineNum);
+				exit(1);
+			}
+
+			/* generate machine code */
+			int machineCode = 0;
+			if (!strcmp(opcode, "add")){
+				machineCode = machineCode | (0 << 22);
+			}
+			else if (!strcmp(opcode, "nor")) {
+				machineCode = machineCode | (1 << 22);
+			}
+			machineCode = machineCode | (regA << 19);
+			machineCode = machineCode | (regB << 16);
+			machineCode = machineCode | (destReg << 0);
+			fprintf(outFilePtr, "%d\n", machineCode);
+		}
+
+		/* I-type instructions */
+		else if (strcmp(opcode, "lw") == 0 || strcmp(opcode, "sw") == 0 || strcmp(opcode, "beq") == 0) {
+			/* check if register argument is an integer */
+			if (!isNumber(arg0) || !isNumber(arg1)) {
+				printf("error: invalid register argument at line %d\n", lineNum);
+				exit(1);
+			}
+
+			int regA = atoi(arg0);
+			int regB = atoi(arg1);
+			char* field2 = arg2;
+			int offsetField;
+			int beqOffset;
+
+			/* check if register number is inside the range [0,7] */
+			if (regA < 0 || regA > 7 || regB < 0 || regB > 7) {
+				printf("error: invalid register number at line %d\n", lineNum);
+				exit(1);
+			}
+
+			/* if field2 is a numeric value */
+			if (isNumber(field2)) {
+				/* check if the offsetField fits in 16 bits */
+				if (atoi(field2) < -32768 || atoi(field2) > 32767) {
+					printf("error: offsetField out of range at line %d\n", lineNum);
+					exit(1);
+				}
+				/* chop off all but the lowest 16 bits for negatvie values of offsetField */
+				if (atoi(field2) < 0) {
+					offsetField = atoi(field2) & 0xFFFF;
+					beqOffset = atoi(field2) & 0xFFFF;
+				}
+				else {
+					offsetField = atoi(field2);
+					beqOffset = atoi(field2);
+				}
+			}
+
+			/* if offsetField is a symbolic address */
+			else {
+				/* check if label exist in the address table */
+				int labelExist = 0;
+				for (int i = 0; i < addressTableIndex; i++) {
+					if (!strcmp(field2, addressTable[i])) {
+						offsetField = i;
+						beqOffset = i - PC - 1;
+						if(beqOffset < 0) {
+							beqOffset = beqOffset & 0xFFFF;
+						}
+						labelExist = 1;
+						break;
+					}
+				}
+
+				if (!labelExist) {
+					printf("error: undefined label at line %d\n", lineNum);
+					exit(1);
+				}
+			}
+
+			/* generate machine code */
+			int machineCode = 0;
+			if (!strcmp(opcode, "lw")) {
+				machineCode = machineCode | (2 << 22);
+				machineCode = machineCode | (regA << 19);
+				machineCode = machineCode | (regB << 16);
+				machineCode = machineCode | (offsetField << 0);
+			}
+			else if (!strcmp(opcode, "sw")) {
+				machineCode = machineCode | (3 << 22);
+				machineCode = machineCode | (regA << 19);
+				machineCode = machineCode | (regB << 16);
+				machineCode = machineCode | (offsetField << 0);
+			}
+			else if (!strcmp(opcode, "beq")) {
+				machineCode = machineCode | (4 << 22);
+				machineCode = machineCode | (regA << 19);
+				machineCode = machineCode | (regB << 16);
+				machineCode = machineCode | (beqOffset << 0);
+			}
+			fprintf(outFilePtr, "%d\n", machineCode);
+		}
+
+		/* J-type instructions */
+		else if (strcmp(opcode, "jalr") == 0) {
+			/* check if register argument is an integer */
+			if (!isNumber(arg0) || !isNumber(arg1)) {
+				printf("error: invalid register argument at line %d\n", lineNum);
+				exit(1);
+			}
+
+			int regA = atoi(arg0);
+			int regB = atoi(arg1);
+
+			/* check if register number is inside the range [0,7] */
+			if (regA < 0 || regA > 7 || regB < 0 || regB > 7) {
+				printf("error: invalid register number at line %d\n", lineNum);
+				exit(1);
+			}
+
+			/* generate machine code */
+			int machineCode = 0;
+			machineCode = machineCode | (5 << 22);
+			machineCode = machineCode | (regA << 19);
+			machineCode = machineCode | (regB << 16);
+			fprintf(outFilePtr, "%d\n", machineCode);
+		}
+
+		/* O-type instructions */
+		else if (strcmp(opcode, "halt") == 0 || strcmp(opcode, "noop") == 0) {
+			int machineCode = 0;
+			if (!strcmp(opcode, "halt")) {
+				machineCode = machineCode | (6 << 22);
+			}
+			else if (!strcmp(opcode, "noop")) {
+				machineCode = machineCode | (7 << 22);
+			}
+			fprintf(outFilePtr, "%d\n", machineCode);
+		}
+
+		/* .fill */
+		else if (strcmp(opcode, ".fill") == 0) {
+			char *field0 = arg0;
+			int fillValue;
+
+			/* if field0 is a numeric value */
+			if (isNumber(field0)) {
+				fillValue = atoi(field0);
+			}
+
+			/* if field0 is a symbolic address */
+			else {
+				/* check if label exist in the address table */
+				int labelExist = 0;
+				for (int i = 0; i < addressTableIndex; i++) {
+					if (!strcmp(field0, addressTable[i])) {
+						fillValue = i;
+						labelExist = 1;
+						break;
+					}
+				}
+
+				if (!labelExist) {
+					printf("error: undefined label at line %d\n", lineNum);
+					exit(1);
+				}
+			}
+
+			fprintf(outFilePtr, "%d\n", fillValue);
+		}
+
+		else {
+			printf("error: invalid opcode at line %d\n", lineNum);
+			exit(1);
+		}
+
+		PC++;
 	}
 
 	if (inFilePtr) {
@@ -120,4 +340,3 @@ int isNumber(char *string)
 	int i;
 	return( (sscanf(string, "%d", &i)) == 1);
 }
-
