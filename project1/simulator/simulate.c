@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
                     state.reg[arg2] = state.reg[arg0] + state.reg[arg1];
                     break;
                 case 1:
-                    state.reg[arg2] = ~(state.reg[arg0] || state.reg[arg1]);
+                    state.reg[arg2] = ~(state.reg[arg0] | state.reg[arg1]);
                     break;
             }
 
@@ -119,8 +119,8 @@ int main(int argc, char *argv[])
             isValidReg(arg0);
             isValidReg(arg1);
 
-            state.reg[arg1] = state.pc;
-            state.pc = state.reg[arg0];
+            state.reg[arg1] = state.pc + 1;
+            state.pc = state.reg[arg0] - 1;
 
             instructionCount++;
         }
@@ -132,6 +132,10 @@ int main(int argc, char *argv[])
             }
 
             instructionCount++;
+        }
+
+        else{
+            printf("error: invalid opcode\n");
         }
     }
     printf("machine halted\n");
@@ -172,9 +176,20 @@ int convertNum(int num)
 void parse(stateType *statePtr, int *opcode, int *arg0, int *arg1, int *arg2)
 {
     *opcode = statePtr->mem[statePtr->pc] >> 22 & 0x7;
+
+    /* I-type, J-type, O-type */
+    if (*opcode == 2 || *opcode == 3 || *opcode == 4 || *opcode == 5 || *opcode == 6 || *opcode == 7) {
+        *arg0 = (statePtr->mem[statePtr->pc] >> 19) & 0x7;
+        *arg1 = (statePtr->mem[statePtr->pc] >> 16) & 0x7;
+        *arg2 = statePtr->mem[statePtr->pc] & 0xFFFF;
+        return;
+    }
+
+    /* R-type */
     *arg0 = (statePtr->mem[statePtr->pc] >> 19) & 0x7;
     *arg1 = (statePtr->mem[statePtr->pc] >> 16) & 0x7;
-    *arg2 = statePtr->mem[statePtr->pc] & 0xFFFF;
+    *arg2 = statePtr->mem[statePtr->pc] & 0x7;
+
 }
 
 void isValidReg(int arg)
