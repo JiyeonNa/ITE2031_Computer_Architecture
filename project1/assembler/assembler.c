@@ -336,7 +336,12 @@ int readAndParse(FILE *inFilePtr, char *label, char *opcode, char *arg0,
 
 int isNumber(char *string)
 {
-	/* return 1 if string is a number */
-	int i;
-	return( (sscanf(string, "%d", &i)) == 1);
+	// /* return 1 if string is a number */
+	// int i;
+	// return( (sscanf(string, "%d", &i)) == 1);
+
+	/* return 1 if string is a integer */
+	char str[20];
+    sprintf(str, "%d", atoi(string));
+    return(!strcmp(string, str));
 }
