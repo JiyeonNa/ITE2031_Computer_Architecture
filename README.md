@@ -38,7 +38,7 @@ Bits 31-25 are unused for all instructions, and should always be 0.</p>
 
 <br>
 
-### [1. LC-2K Assembly Language and Assembler](https://github.com/najiyeon/ITE2031_Computer_Architecture/tree/master/project1/assembler)
+### [1. LC-2K Assembly Language and Assembler](https://github.com/najiyeon/ITE2031_Computer_Architecture/tree/master/project1/assembler/assemble.c)
 <p>The first part of this project is to write a program to take an assembly-language program and translate it into machine language.</p>
 
 <br>
@@ -67,7 +67,7 @@ The format for a line of assembly code is :
 
 <br>
 
-### [2. Behavioral Simulator](https://github.com/najiyeon/ITE2031_Computer_Architecture/tree/master/project1/simulator)
+### [2. Behavioral Simulator](https://github.com/najiyeon/ITE2031_Computer_Architecture/blob/master/project1/simulator/simulate.c)
 <p>The second part of this assignment is to write a program that can simulate any legal LC-2K machine-code program.</p>
 
 
