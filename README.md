@@ -1,7 +1,7 @@
 # ITE2031_Computer_Architecture
 *Hanyang University, Computer Architecture, Spring 2023, by prof. Woong Sul*
 
-## Project 01
+## [Project 01](https://github.com/najiyeon/ITE2031_Computer_Architecture/tree/master/project1)
 <p>This project is intended to help understand the instructions of a very simple assembly language and how to assemble programs into machine language.</p>
 
 ### LC-2K Instruction-Set Architecture
@@ -38,7 +38,7 @@ Bits 31-25 are unused for all instructions, and should always be 0.</p>
 
 <br>
 
-### 1. LC-2K Assembly Language and Assembler
+### [1. LC-2K Assembly Language and Assembler](https://github.com/najiyeon/ITE2031_Computer_Architecture/tree/master/project1/assembler)
 <p>The first part of this project is to write a program to take an assembly-language program and translate it into machine language.</p>
 
 The format for a line of assembly code is :
@@ -63,13 +63,13 @@ The format for a line of assembly code is :
 
 <br>
 
-### 2. Behavioral Simulator
+### [2. Behavioral Simulator](https://github.com/najiyeon/ITE2031_Computer_Architecture/tree/master/project1/simulator)
 <p>The second part of this assignment is to write a program that can simulate any legal LC-2K machine-code program.</p>
 
 
 
 <br>
 
-### 3. Assembly-Language Multiplication
+### [3. Assembly-Language Multiplication](https://github.com/najiyeon/ITE2031_Computer_Architecture/blob/master/project1/assembler/mult.as)
 <p>The third part of this assignment is to write an assembly-language program to multiply two numbers.</p>
 
