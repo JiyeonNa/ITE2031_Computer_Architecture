@@ -58,7 +58,8 @@ The format for a line of assembly code is :
 > field0 is regA, field1 is regB, and field2 is destReg.
 
 ***I-type instructions (lw, sw, beq) require 3 fields:***        
-> field0 is regA, field1 is regB, and field2 is either a numeric value for offsetField or a symbolic address. Numeric offsetFields can be positive or negative; symbolic addresses are discussed below.
+> field0 is regA, field1 is regB, and field2 is either a numeric value for offsetField or a symbolic address.
+> Numeric offsetFields can be positive or negative.
    
 ***J-type instructions (jalr) require 2 fields:***       
 > field0 is regA, and field1 is regB.
