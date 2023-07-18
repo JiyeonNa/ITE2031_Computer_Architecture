@@ -1,7 +1,7 @@
 # ITE2031_Computer_Architecture
 *Hanyang University, Computer Architecture, Spring 2023, by prof. Woong Sul*
 
-## [Project 01](https://github.com/najiyeon/ITE2031_Computer_Architecture/tree/master/project1)
+## Project 01
 <p>This project is intended to help understand the instructions of a very simple assembly language and how to assemble programs into machine language.</p>
 
 ### LC-2K Instruction-Set Architecture
@@ -41,7 +41,9 @@ Bits 31-25 are unused for all instructions, and should always be 0.</p>
 ### [1. LC-2K Assembly Language and Assembler](https://github.com/najiyeon/ITE2031_Computer_Architecture/tree/master/project1/assembler)
 <p>The first part of this project is to write a program to take an assembly-language program and translate it into machine language.</p>
 
-The format for a line of assembly code is :
+<br>
+
+The format for a line of assembly code is :     
 > label`<white>`instruction`<white>`fld0`<white>`fld1`<white>`fld2`<white>`comments   
 > (``<white>`` means a series of tabs and/or spaces)
 
@@ -49,6 +51,8 @@ The format for a line of assembly code is :
 
 **<p> Description of Machine Instructions </p>**
 <img width="905" alt="스크린샷 2023-07-18 오후 2 15 17" src="https://github.com/najiyeon/ITE2031_Computer_Architecture/assets/113894257/b1b063bf-a3d4-4ad8-ad6d-7faed56e1250">
+
+<br>
 
 ***R-type instructions (add, nor) instructions require 3 fields:***    
 > field0 is regA, field1 is regB, and field2 is destReg.
